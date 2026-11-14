@@ -27,6 +27,9 @@ UA = {
 DJ_URL = "https://danjuanfunds.com/djapi/index_eva/dj"
 HIST_URL = "https://danjuanfunds.com/djapi/index_eva/pe_history/{code}?day=all"
 
+# 蛋卷时间戳按北京时间解读；显式指定时区，避免 GitHub Actions(UTC) 下日期少一天
+TZ8 = datetime.timezone(datetime.timedelta(hours=8))
+
 # code, 名称, 市场(A=沪深 / HK=港股), 规模分组
 BROAD = [
     ("SH000300", "沪深300",  "A", "大盘"),
@@ -120,7 +123,7 @@ def main():
             pe = x.get("pe")
             if not pe or pe <= 0:
                 continue
-            d = datetime.datetime.fromtimestamp(x["ts"] / 1000).date()
+            d = datetime.datetime.fromtimestamp(x["ts"] / 1000, TZ8).date()
             points.append((d, float(pe)))
         if len(points) < 30:
             print("    !! 样本过少，跳过")
@@ -162,7 +165,7 @@ def main():
 
     a = [r for r in indices if r["market"] == "A"]
     hk = [r for r in indices if r["market"] == "HK"]
-    now = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
+    now = datetime.datetime.now(TZ8)
     out = {
         "generated_at": now.strftime("%Y-%m-%d %H:%M") + " (北京时间)",
         "date": max((r["end"] for r in indices), default=str(now.date())),
