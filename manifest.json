@@ -1,0 +1,16 @@
+{
+  "name": "宽基估值 · PE 10年分位",
+  "short_name": "宽基分位",
+  "description": "A股与港股宽基指数 PE 近 10 年历史分位，每交易日自动更新",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6f9",
+  "theme_color": "#123a6b",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
