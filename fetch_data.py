@@ -275,12 +275,17 @@ def save_cache(rows, data_date):
     print("  已更新全球数据缓存", os.path.basename(CACHE_FILE))
 
 
+GLOBAL_FROM_CACHE = False
+
+
 def load_cache():
+    global GLOBAL_FROM_CACHE
     if not os.path.exists(CACHE_FILE):
         print("  !! 无缓存可用")
         return []
     try:
         d = json.load(open(CACHE_FILE, encoding="utf-8"))
+        GLOBAL_FROM_CACHE = True
         print("  从缓存读取全球指数", len(d["indices"]), "个，数据日", d.get("date"))
         return d["indices"]
     except Exception as e:
@@ -289,6 +294,8 @@ def load_cache():
 
 
 def main():
+    global GLOBAL_FROM_CACHE
+    GLOBAL_FROM_CACHE = False
     cn = fetch_cn_hk()
     gl = fetch_global()
     indices = cn + gl
@@ -303,6 +310,7 @@ def main():
         "source": "蛋卷基金（A股/港股） + 韭圈儿（全球）",
         "method": "当前 PE 在近 10 年历史 PE 序列中的百分位；分位越低越便宜。"
                   "上市不足 10 年者按可得全部历史；极端盈利失真值已从区间与走势图剔除。",
+        "global_from_cache": GLOBAL_FROM_CACHE,
         "markets": {
             "all": summarize(indices),
             "a": summarize(a),
