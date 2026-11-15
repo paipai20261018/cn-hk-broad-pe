@@ -1,7 +1,7 @@
 {
   "name": "宽基估值 · PE 10年分位",
   "short_name": "宽基分位",
-  "description": "A股与港股宽基指数 PE 近 10 年历史分位，每交易日自动更新",
+  "description": "A股 / 港股 / 全球宽基指数 PE 近 10 年历史分位，每交易日自动更新",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
