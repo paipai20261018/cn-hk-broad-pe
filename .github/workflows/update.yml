@@ -2,10 +2,10 @@ name: 更新宽基 PE 10年分位数据
 
 on:
   schedule:
-    # UTC 1:30 = 北京时间 9:30（A股开盘前）
-    - cron: '30 1 * * 1-5'
-    # UTC 8:00 = 北京时间 16:00（A股/港股收盘后）
-    - cron: '0 8 * * 1-5'
+    # 工作日每小时一次（UTC 0:30~12:30 = 北京时间 8:30~20:30）
+    # GitHub 免费版定时任务经常延迟甚至漏跑，用高频次对冲：
+    # 只要任意一次成功，data.json 就是当天最新抓取结果
+    - cron: '30 0-12 * * 1-5'
   workflow_dispatch:
 
 permissions:
@@ -31,6 +31,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "数据无变化，跳过提交"
           else
-            git commit -m "chore: 更新宽基PE分位数据 $(date -u +%Y-%m-%d)"
+            git commit -m "chore: 更新宽基PE分位数据 $(date -u +%Y-%m-%d\ %H:%M)"
+            git pull --rebase origin main
             git push
           fi
