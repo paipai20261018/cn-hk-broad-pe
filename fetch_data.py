@@ -27,6 +27,10 @@ import requests
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CACHE_FILE = os.path.join(BASE_DIR, "global_cache.json")
 
+# 韭圈儿列表接口的 new_update_time 常比真实最新交易日滞后 1 天以上，
+# 单独记下来供页面诊断，不再拿它当「数据日」
+GLOBAL_LIST_DATE = ""
+
 UA_DJ = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                   "(KHTML, like Gecko) Chrome/120.0 Safari/537.36",
@@ -205,12 +209,14 @@ def robust_range(pes):
 
 def fetch_global():
     """韭圈儿：全球主要宽基。在线失败时回退到仓库内的静态缓存。"""
+    global GLOBAL_LIST_DATE
     print("抓取韭圈儿境外指数列表 ...")
     j = get_json(JCS_LIST_URL, headers=UA_JCS)
     if not j or "rows" not in j:
         print("  !! 列表获取失败，尝试缓存")
         return load_cache()
     data_date = j.get("new_update_time") or str(datetime.datetime.now(TZ8).date())
+    GLOBAL_LIST_DATE = data_date
     rows = []
     for it in j["rows"]:
         code = it["code"]
@@ -279,13 +285,14 @@ GLOBAL_FROM_CACHE = False
 
 
 def load_cache():
-    global GLOBAL_FROM_CACHE
+    global GLOBAL_FROM_CACHE, GLOBAL_LIST_DATE
     if not os.path.exists(CACHE_FILE):
         print("  !! 无缓存可用")
         return []
     try:
         d = json.load(open(CACHE_FILE, encoding="utf-8"))
         GLOBAL_FROM_CACHE = True
+        GLOBAL_LIST_DATE = d.get("date") or GLOBAL_LIST_DATE
         print("  从缓存读取全球指数", len(d["indices"]), "个，数据日", d.get("date"))
         return d["indices"]
     except Exception as e:
@@ -303,10 +310,13 @@ def main():
     hk = [r for r in indices if r["market"] == "HK"]
     g = [r for r in indices if r["market"] == "G"]
     now = datetime.datetime.now(TZ8)
+    # 数据日 = 实际抓到的最新 PE 走势交易日，而不是列表接口那个滞后的 new_update_time
+    hist_ends = [r["histEnd"] for r in indices if r.get("histEnd")]
+    latest = max(hist_ends) if hist_ends else str(now.date())
     out = {
         "generated_at": now.strftime("%Y-%m-%d %H:%M") + " (北京时间)",
-        "date": max((r["end"] for r in indices if r["end"]),
-                    default=str(now.date())),
+        "date": latest,
+        "list_date": GLOBAL_LIST_DATE,
         "source": "蛋卷基金（A股/港股） + 韭圈儿（全球）",
         "method": "当前 PE 在近 10 年历史 PE 序列中的百分位；分位越低越便宜。"
                   "上市不足 10 年者按可得全部历史；极端盈利失真值已从区间与走势图剔除。",
